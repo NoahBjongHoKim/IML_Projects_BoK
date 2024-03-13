@@ -53,11 +53,35 @@ def fit(X, y):
     """
     w = np.zeros((21,))
     X_transformed = transform_data(X)
+
     # TODO: Enter your code here
-    w = np.linalg.inv(X_transformed.T @ X_transformed) @ X_transformed.T @ y
+    #w = np.linalg.inv(X_transformed.T @ X_transformed) @ X_transformed.T @ y
+    w = np.linalg.inv(X_transformed.T @ X_transformed + 0.1 * np.eye(21)) @ X_transformed.T @ y
     assert w.shape == (21,)
     return w
 
+def calculate_RMSE(w, X, y):
+    """This function takes test data points (X and y), and computes the empirical RMSE of 
+    predicting y from X using a linear model with weights w. 
+
+    Parameters
+    ----------
+    w: array of floats: dim = (13,), optimal parameters of ridge regression 
+    X: matrix of floats, dim = (15,13), inputs with 13 features
+    y: array of floats, dim = (15,), input labels
+
+    Returns
+    ----------
+    RMSE: float: dim = 1, RMSE value
+    """
+    RMSE = 0
+    # TODO: Enter your code here
+    for i in range(len(X)):
+        y_pred = np.dot(X[i], w)
+        RMSE += (y[i] - y_pred) ** 2
+    RMSE = np.sqrt(RMSE / len(X))
+    assert np.isscalar(RMSE)
+    return RMSE
 
 # Main function. You don't have to change this
 if __name__ == "__main__":
@@ -72,4 +96,6 @@ if __name__ == "__main__":
     # The function retrieving optimal LR parameters
     w = fit(X, y)
     # Save results in the required format
-    np.savetxt("./results.csv", w, fmt="%.12f")
+    np.savetxt("./results.csv", w, fmt="%.16f")
+
+    print("RMSE: ", calculate_RMSE(w, transform_data(X), y))
