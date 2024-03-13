@@ -28,6 +28,11 @@ def transform_data(X):
     """
     X_transformed = np.zeros((700, 21))
     # TODO: Enter your code here
+    X_transformed[:, 0:5] = X
+    X_transformed[:, 5:10] = X**2
+    X_transformed[:, 10:15] = np.exp(X)
+    X_transformed[:, 15:20] = np.cos(X)
+    X_transformed[:, 20] = 1
     assert X_transformed.shape == (700, 21)
     return X_transformed
 
@@ -49,6 +54,7 @@ def fit(X, y):
     w = np.zeros((21,))
     X_transformed = transform_data(X)
     # TODO: Enter your code here
+    w = np.linalg.inv(X_transformed.T @ X_transformed) @ X_transformed.T @ y
     assert w.shape == (21,)
     return w
 
