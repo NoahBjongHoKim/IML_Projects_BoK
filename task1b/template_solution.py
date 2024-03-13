@@ -28,6 +28,7 @@ def transform_data(X):
     """
     X_transformed = np.zeros((700, 21))
     # TODO: Enter your code here
+    # X_transformed = [X, X^2, exp(X), cos(X), 1]
     X_transformed[:, 0:5] = X
     X_transformed[:, 5:10] = X**2
     X_transformed[:, 10:15] = np.exp(X)
@@ -55,7 +56,8 @@ def fit(X, y):
     X_transformed = transform_data(X)
 
     # TODO: Enter your code here
-    #w = np.linalg.inv(X_transformed.T @ X_transformed) @ X_transformed.T @ y
+    # w = (X^T * X + 0.1 * I)^(-1) * X^T * y ridge regression
+    # Possible improvement use grid search to find the best lambda
     w = np.linalg.inv(X_transformed.T @ X_transformed + 0.1 * np.eye(21)) @ X_transformed.T @ y
     assert w.shape == (21,)
     return w
@@ -76,6 +78,7 @@ def calculate_RMSE(w, X, y):
     """
     RMSE = 0
     # TODO: Enter your code here
+    # RMSE = sqrt(1/n * sum((y - y_pred)^2))
     for i in range(len(X)):
         y_pred = np.dot(X[i], w)
         RMSE += (y[i] - y_pred) ** 2
