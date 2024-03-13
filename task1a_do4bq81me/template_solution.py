@@ -27,6 +27,7 @@ def fit(X, y, lam):
     """
     w = np.zeros((13,))
     # TODO: Enter your code here
+    w = np.linalg.inv(X.T @ X + lam * np.identity(X.shape[1])) @ X.T @ y
     assert w.shape == (13,)
     return w
 
@@ -47,6 +48,10 @@ def calculate_RMSE(w, X, y):
     """
     RMSE = 0
     # TODO: Enter your code here
+    for i in range(len(X)):
+        y_pred = np.dot(X[i], w)
+        RMSE += (y[i] - y_pred) ** 2
+    RMSE = np.sqrt(RMSE / len(X))
     assert np.isscalar(RMSE)
     return RMSE
 
@@ -71,7 +76,16 @@ def average_LR_RMSE(X, y, lambdas, n_folds):
 
     # TODO: Enter your code here. Hint: Use functions 'fit' and 'calculate_RMSE' with training and test data
     # and fill all entries in the matrix 'RMSE_mat'
-
+    kf = KFold(n_splits=n_folds)
+    fold = 0
+    for train_index, test_index in kf.split(X):
+        X_train, X_test = X[train_index], X[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+        for i, lam in enumerate(lambdas):
+            w = fit(X_train, y_train, lam)
+            RMSE = calculate_RMSE(w, X_test, y_test)
+            RMSE_mat[fold, i] = RMSE
+        fold += 1
     avg_RMSE = np.mean(RMSE_mat, axis=0)
     assert avg_RMSE.shape == (5,)
     return avg_RMSE
