@@ -4,6 +4,8 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import KFold
+from sklearn.linear_model import Ridge
+
 
 # Add any additional imports here (however, the task is solvable without using 
 # any additional imports)
@@ -26,7 +28,10 @@ def fit(X, y, lam):
     w: array of floats: dim = (13,), optimal parameters of ridge regression
     """
     w = np.zeros((13,))
-    # TODO: Enter your code here
+    model = Ridge(alpha = lam, fit_intercept=False)
+    model.fit(X,y)
+    w = model.coef_
+    print(w)
     assert w.shape == (13,)
     return w
 
@@ -45,15 +50,24 @@ def calculate_RMSE(w, X, y):
     ----------
     RMSE: float: dim = 1, RMSE value
     """
-    RMSE = 0
-    # TODO: Enter your code here
+    
+    N= len(X)
+
+    X_weighted = np.matmul(X,w) #every entry should be w_i*x_i for all rows
+    #y_predict = X_weighted.sum(axis=1) #should sum along rows
+    #print(np.shape(y_predict)) #just hope it is a vector
+    y_diff = (y-X_weighted)**2 #to the power of 2
+    sum = y_diff.sum() #the final calculations
+    RMSE = np.sqrt(sum/N)
+
     assert np.isscalar(RMSE)
     return RMSE
 
 
 def average_LR_RMSE(X, y, lambdas, n_folds):
     """
-    Main cross-validation loop, implementing 10-fold CV. In every iteration (for every train-test split), the RMSE for every lambda is calculated, 
+    Main cross-validation loop, implementing 10-fold CV. In every iteration (for every train-test split),
+    the RMSE for every lambda is calculated, 
     and then averaged over iterations.
     
     Parameters
@@ -71,7 +85,15 @@ def average_LR_RMSE(X, y, lambdas, n_folds):
 
     # TODO: Enter your code here. Hint: Use functions 'fit' and 'calculate_RMSE' with training and test data
     # and fill all entries in the matrix 'RMSE_mat'
-    #Changes
+    kf = KFold(n_splits=n_folds)
+
+    for i, (train, test) in enumerate(kf.split(X,y)):
+        X_train, X_test = X[train], X[test]
+        y_train, y_test = y[train], y[test]
+        for j, lam in enumerate(lambdas):
+            w = fit(X_train,y_train,lam)
+            RMSE_mat[i,j] = calculate_RMSE(w, X_test, y_test)
+
     avg_RMSE = np.mean(RMSE_mat, axis=0)
     assert avg_RMSE.shape == (5,)
     return avg_RMSE
@@ -93,3 +115,4 @@ if __name__ == "__main__":
     avg_RMSE = average_LR_RMSE(X, y, lambdas, n_folds)
     # Save results in the required format
     np.savetxt("./results.csv", avg_RMSE, fmt="%.12f")
+    #print("Sara is doing the code code :)")
