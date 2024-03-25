@@ -85,7 +85,7 @@ def average_LR_RMSE(X, y, lambdas, n_folds):
 
     # TODO: Enter your code here. Hint: Use functions 'fit' and 'calculate_RMSE' with training and test data
     # and fill all entries in the matrix 'RMSE_mat'
-    kf = KFold(n_splits=n_folds)
+    kf = KFold(n_splits=n_folds, shuffle = True, random_state=1)
 
     for i, (train, test) in enumerate(kf.split(X,y)):
         X_train, X_test = X[train], X[test]
