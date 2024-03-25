@@ -87,12 +87,12 @@ def average_LR_RMSE(X, y, lambdas, n_folds):
     # and fill all entries in the matrix 'RMSE_mat'
     kf = KFold(n_splits=n_folds, shuffle = True, random_state=1)
 
-    for i, (train, test) in enumerate(kf.split(X,y)):
-        X_train, X_test = X[train], X[test]
-        y_train, y_test = y[train], y[test]
+    for i, (train, validation) in enumerate(kf.split(X,y)):
+        X_train, X_validation = X[train], X[validation]
+        y_train, y_validation = y[train], y[validation]
         for j, lam in enumerate(lambdas):
             w = fit(X_train,y_train,lam)
-            RMSE_mat[i,j] = calculate_RMSE(w, X_test, y_test)
+            RMSE_mat[i,j] = calculate_RMSE(w, X_validation, y_validation)
 
     avg_RMSE = np.mean(RMSE_mat, axis=0)
     assert avg_RMSE.shape == (5,)
