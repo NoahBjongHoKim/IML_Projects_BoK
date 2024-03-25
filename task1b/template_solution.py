@@ -57,8 +57,8 @@ def fit(X, y):
 
     # TODO: Enter your code here
     # w = (X^T * X + 0.1 * I)^(-1) * X^T * y ridge regression
-    # Possible improvement use grid search to find the best lambda
-    w = np.linalg.inv(X_transformed.T @ X_transformed + 0.1 * np.eye(21)) @ X_transformed.T @ y
+    # Possible improvement use grid search to find the best lambda, but Im to stupid for that
+    w = np.linalg.inv(X_transformed.T @ X_transformed + 312.5 * np.eye(21)) @ X_transformed.T @ y
     assert w.shape == (21,)
     return w
 
