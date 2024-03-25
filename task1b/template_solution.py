@@ -4,7 +4,7 @@
 import numpy as np
 import pandas as pd
 
-# Add any additional imports here (however, the task is solvable without using 
+# Add any additional imports here (however, the task is solvable without using
 # any additional imports)
 # import ...
 

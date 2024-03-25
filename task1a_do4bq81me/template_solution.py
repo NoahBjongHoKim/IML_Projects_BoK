@@ -29,6 +29,7 @@ def fit(X, y, lam):
     # TODO: Enter your code here
     # w = (X^T * X + lam * I)^(-1) * X^T * y ridge regression formula
     w = np.linalg.inv(X.T @ X + lam * np.identity(X.shape[1])) @ X.T @ y
+    print(w)
     assert w.shape == (13,)
     return w
 
