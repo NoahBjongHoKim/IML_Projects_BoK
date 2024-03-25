@@ -7,6 +7,7 @@ import pandas as pd
 # Add any additional imports here (however, the task is solvable without using 
 # any additional imports)
 # import ...
+from sklearn.linear_model import RidgeCV
 
 def transform_data(X):
     """
@@ -27,7 +28,26 @@ def transform_data(X):
     X_transformed: array of floats: dim = (700,21), transformed input with 21 features
     """
     X_transformed = np.zeros((700, 21))
-    # TODO: Enter your code here
+    
+    #linear
+    X_transformed[:,0:5] = X 
+
+    #quadratic
+    for i in range(0,5):
+        X_transformed[:,i+5] = X[:,i]**2
+
+    #exponential
+    for i in range(0,5):
+        X_transformed[:,i+10] = np.exp(X[:,i])
+
+    #cosine
+    for i in range(0,5):
+        X_transformed[:,i+15] = np.cos(X[:,i])
+    
+    #constant
+    X_transformed[:,-1] = X_transformed[:,-1]+1
+
+    #end
     assert X_transformed.shape == (700, 21)
     return X_transformed
 
@@ -49,6 +69,11 @@ def fit(X, y):
     w = np.zeros((21,))
     X_transformed = transform_data(X)
     # TODO: Enter your code here
+
+    model = RidgeCV(alphas = [0.1,], fit_intercept=False)
+    model.fit(X_transformed,y)
+    w = model.coef_
+    #print(w.shape)
     assert w.shape == (21,)
     return w
 
