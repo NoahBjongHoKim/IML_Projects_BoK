@@ -3,6 +3,11 @@
 # First, we import necessary libraries:
 import numpy as np
 import pandas as pd
+from sklearn.linear_model import LinearRegression
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import DotProduct, RBF, Matern, RationalQuadratic
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import LabelEncoder
 
 def data_loading():
     """
@@ -40,7 +45,20 @@ def data_loading():
     X_test = np.zeros_like(test_df)
 
     # TODO: Perform data preprocessing, imputation and extract X_train, y_train and X_test
+    # Encode the 'season' column
+    le = LabelEncoder()
+    train_df['season'] = le.fit_transform(train_df['season'])
+    test_df['season'] = le.transform(test_df['season'])
+    # Handle missing values (NaN) using imputation
+    imputer = SimpleImputer(strategy='mean')  # Replace missing values with the mean
+    train_df = pd.DataFrame(imputer.fit_transform(train_df), columns=train_df.columns)
+    test_df = pd.DataFrame(imputer.fit_transform(test_df), columns=test_df.columns)
 
+    # Extract features and labels
+    X_train = train_df.drop(['price_CHF'], axis=1).to_numpy()
+    y_train = train_df['price_CHF'].to_numpy()
+    X_test = test_df.to_numpy()
+    
     assert (X_train.shape[1] == X_test.shape[1]) and (X_train.shape[0] == y_train.shape[0]) and (X_test.shape[0] == 100), "Invalid data shape"
     return X_train, y_train, X_test
 
@@ -61,6 +79,12 @@ def modeling_and_prediction(X_train, y_train, X_test):
 
     y_pred=np.zeros(X_test.shape[0])
     #TODO: Define the model and fit it using training data. Then, use test data to make predictions
+    # Define the model and fit it using training data
+    model = LinearRegression()
+    model.fit(X_train, y_train)
+
+    # Use the trained model to make predictions on test data
+    y_pred = model.predict(X_test)
 
     assert y_pred.shape == (100,), "Invalid data shape"
     return y_pred
