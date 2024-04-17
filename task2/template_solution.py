@@ -152,7 +152,7 @@ def modeling_and_prediction(X_train, y_train, X_test):
 
     print("\nBest Kernel based on average MSE:", type(best_kernel).__name__)
 
-    model = GaussianProcessRegressor(kernel=RationalQuadratic())
+    model = GaussianProcessRegressor(kernel=best_kernel)
     model.fit(X_train, y_train)
     
     # Use the trained model to make predictions on test data
