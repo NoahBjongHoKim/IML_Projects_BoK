@@ -3,6 +3,8 @@
 # First, we import necessary libraries:
 import numpy as np
 import pandas as pd
+#from sklearn.impute import IterativeImputer
+from sklearn.preprocessing import LabelEncoder
 
 def data_loading():
     """
@@ -32,6 +34,10 @@ def data_loading():
     print(test_df.shape)
     print(test_df.head(2))
 
+    #drop columns, where price_CHF is naN
+    train_df = train_df.dropna(subset=['price_CHF'])
+    print(train_df.head(10))
+
     # Dummy initialization of the X_train, X_test and y_train
     # TODO: Depending on how you deal with the non-numeric data, you may want to 
     # modify/ignore the initialization of these variables   
@@ -40,6 +46,16 @@ def data_loading():
     X_test = np.zeros_like(test_df)
 
     # TODO: Perform data preprocessing, imputation and extract X_train, y_train and X_test
+
+    #encode seasons
+    le = LabelEncoder()
+    le.fit(["winter", "autumn", "spring", "summer"]) #ordered by average energy consumption
+    LabelEncoder()
+    train_df = le.transform(train_df)
+    print(train_df)
+
+    #compute mean price of each country for each season
+
 
     assert (X_train.shape[1] == X_test.shape[1]) and (X_train.shape[0] == y_train.shape[0]) and (X_test.shape[0] == 100), "Invalid data shape"
     return X_train, y_train, X_test
