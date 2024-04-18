@@ -9,7 +9,7 @@ from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
 from sklearn.impute import SimpleImputer, KNNImputer
 from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import DotProduct, RBF, Matern, RationalQuadratic, WhiteKernel
+from sklearn.gaussian_process.kernels import DotProduct, RBF, Matern, RationalQuadratic, WhiteKernel, Exponentiation
 from sklearn.metrics import r2_score
 from sklearn.model_selection import KFold
 #from sklearn.metrics import mean_squared_error
@@ -143,8 +143,7 @@ def modeling_and_prediction(x_train, y_train, x_test):
     """
 
     y_pred=np.zeros(x_test.shape[0])
-    kernels = [Matern(nu=0.5), RationalQuadratic(),Matern(nu = 0.5)+RationalQuadratic( length_scale_bounds=(100000, 150000.0))+WhiteKernel(), 
-               Matern()*RationalQuadratic()]
+    kernels = [RBF(), Matern(nu=0.5), RationalQuadratic(),Matern(nu = 0.5)+WhiteKernel(),Matern(nu = 0.5)+RationalQuadratic()+WhiteKernel()]
 
     # evaluate each kernel using cross-validation
     best_kernel = None
