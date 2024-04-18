@@ -71,7 +71,7 @@ def data_loading():
 
     # TODO: Perform data preprocessing, imputation and extract X_train, y_train and X_test
     #imputation
-    imp = SimpleImputer(missing_values=np.nan, strategy='mean')
+    imp = SimpleImputer(missing_values=np.nan, strategy='most_frequent')
     imp.fit(train_df.drop(['price_CHF'],axis=1))
     X_train = imp.transform(train_df.drop(['price_CHF'],axis=1))
     #y_train = imp.transform(train_df['price_CHF'])
