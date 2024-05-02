@@ -1,21 +1,28 @@
 import torch
-import torchvision.models as models
+import torchvision.transforms as transforms
+from torchvision.io import read_image
+from torchvision.models import inception_v3
 
-# Load the pre-trained InceptionV3 model
-model = models.inception_v3(pretrained=True)
+img = read_image("dataset/food/00000.jpg")
 
-# Set the model to evaluation mode
+# Step 1: Initialize model with the best available weights
+model = inception_v3(pretrained=True)
 model.eval()
 
-# Dummy input tensor to determine the shape of the output
-dummy_input = torch.randn(1, 3, 299, 299)  # assuming input image size is (299, 299)
+# Step 2: Initialize the inference transforms
+preprocess = transforms.Compose([
+    transforms.Resize(299),
+    transforms.CenterCrop(299),
+    #transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+])
 
-# Pass the dummy input through the model to get the output
-output = model(dummy_input)
+# Step 3: Apply inference preprocessing transforms
+img = preprocess(img).unsqueeze(0)
 
-# Print the shape of the output
-print("Output shape:", output.shape)
-
-# Extract the embedding size from the output shape
-embedding_size = output.size(1)
-print("Embedding size:", embedding_size)
+# Step 4: Use the model and print the predicted category
+with torch.no_grad():
+    prediction = model(img)
+prediction = torch.nn.functional.softmax(prediction[0], dim=0)
+class_id = prediction.argmax().item()
+score = prediction[class_id].item()
+print(f"Class ID: {class_id}, Score: {100 * score}%")

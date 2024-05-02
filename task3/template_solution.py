@@ -43,7 +43,7 @@ def generate_embeddings():
 
     #Average image width: 453.9186
     #Average image height: 306.4356
-    image_size = (306,453)
+    image_size = (299,299)
 
     train_transforms = transforms.Compose([
                                transforms.Resize(image_size),
@@ -81,11 +81,12 @@ def generate_embeddings():
     model.eval()  # Set the model to evaluation mode
     
     with torch.no_grad():  # Disable gradient computation
-        for images in train_loader:
+        for images, _ in train_loader:
             #print(images)
             #images = images.to(device)  # Move images to the device
             # Forward pass through the model to get the output
-            outputs, _ = model(images)  # Get both output and auxiliary output
+            
+            outputs, _ = model(images.unsqueeze(0)[:,2:-1])  # Get both output and auxiliary output
             # Extract embeddings from the output
             embeddings = outputs.cpu().numpy()
             embeddings_list.append(embeddings)  # Append embeddings to the list
