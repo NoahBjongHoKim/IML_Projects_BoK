@@ -12,6 +12,7 @@ import torchvision.datasets as datasets
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision.io import read_image
+from torchvision.models import resnet50, ResNet50_Weights
 #from torchvision.models import inception_v3
 
 # The device is automatically set to GPU if available, otherwise CPU
@@ -22,14 +23,14 @@ from torchvision.io import read_image
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Remove the classifier head
-class NoFinalLayerInception(nn.Module):
-    def __init__(self, original_model):
-        super(NoFinalLayerInception, self).__init__()
-        self.features = nn.Sequential(*list(original_model.children())[:-1])
+# class NoFinalLayerInception(nn.Module):
+#     def __init__(self, original_model):
+#         super(NoFinalLayerInception, self).__init__()
+#         self.features = nn.Sequential(*list(original_model.children())[:-1])
 
-    def forward(self, x):
-        x = self.features(x)
-        return x
+#     def forward(self, x):
+#         x = self.features(x)
+#         return x
 
 def generate_embeddings():
     """
@@ -43,7 +44,7 @@ def generate_embeddings():
 
     #Average image width: 453.9186
     #Average image height: 306.4356
-    image_size = (299,299)
+    image_size = (306,454)
 
     train_transforms = transforms.Compose([
                                transforms.Resize(image_size),
@@ -58,23 +59,22 @@ def generate_embeddings():
     
     #we have to pass images of the same size to the DataLoader or it is unhappy (just like me)
     train_loader = DataLoader(dataset=train_dataset,
-                              batch_size=64, #maybe set to 32 if it does not work
+                              batch_size=32, #maybe set to 32 if it does not work
                               shuffle=False, #set this to true?
                               pin_memory=True, num_workers=4, #and this to 8
                                 )
 
     # TODO: define a model for extraction of the embeddings (Hint: load a pretrained model,
     #  more info here: https://pytorch.org/vision/stable/models.html)
-    model_init = torchvision.models.inception_v3(weights='Inception_V3_Weights.DEFAULT')
-    model = NoFinalLayerInception(model_init)
+    weights = ResNet50_Weights.DEFAULT
+    model = resnet50(weights=weights)
     #model.to(device)
-    embedding_size = 2048 #this works, I tried it 
-                        #for the second to last layer the embedding size is 2048
-    # Dummy variable, replace with the actual embedding size once you 
-    # pick your model
+    embedding_size = 1000 #this works, I tried it 
+
+    # TODO: pick your model
     num_images = len(train_dataset)
-    #embeddings = np.zeros((num_images, embedding_size))
-    embeddings_list = np.array([])
+
+    embeddings_list = []
     # TODO: Use the model to extract the embeddings. Hint: remove the last layers of the 
     # model to access the embeddings the model generates.
 
@@ -82,17 +82,19 @@ def generate_embeddings():
     
     with torch.no_grad():  # Disable gradient computation
         for images, _ in train_loader:
-            #print(images)
-            #images = images.to(device)  # Move images to the device
+            #print("size :", images.size(), " type:", images.type())
+            images = images.to(device)  # Move images to the device
             # Forward pass through the model to get the output
             
-            outputs, _ = model(images.unsqueeze(0)[:,2:-1])  # Get both output and auxiliary output
+            outputs = model(images) # Get both output and auxiliary output
             # Extract embeddings from the output
-            embeddings = outputs.cpu().numpy()
-            embeddings_list.append(embeddings)  # Append embeddings to the list
-
-    assert(embeddings_list.size() == (num_images, embedding_size))
-    np.save('dataset/embeddings.npy', embeddings)
+            embeddings_list.append(outputs.cpu().numpy())  # Append embeddings to the list
+            print(np.shape(embeddings_list))
+    
+    embeddings_list = np.array(embeddings_list)
+    #print(np.shape(embeddings_list))
+    #assert(np.shape(embeddings_list) == (num_images, embedding_size))
+    np.save('dataset/embeddings.npy', embeddings_list)
 
 
 def get_data(file, train=True):
@@ -116,7 +118,7 @@ def get_data(file, train=True):
     filenames = [s[0].split('/')[-1].replace('.jpg', '') for s in train_dataset.samples]
     embeddings = np.load('dataset/embeddings.npy')
     # TODO: Normalize the embeddings
-    embeddings = torch.preprocessing.normalize(embeddings, norm='l2') #TODO: may use another norm here
+    embeddings = torchvision.preprocessing.normalize(embeddings, norm='l2') #TODO: may use another norm here
 
     file_to_embedding = {}
     for i in range(len(filenames)):
