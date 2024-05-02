@@ -10,6 +10,8 @@ from torchvision import transforms
 import torchvision.datasets as datasets
 import torch.nn as nn
 import torch.nn.functional as F
+from torchvision.io import read_image
+#from torchvision.models import inception_v3
 
 # The device is automatically set to GPU if available, otherwise CPU
 # If you want to force the device to CPU, you can change the line to
@@ -17,6 +19,16 @@ import torch.nn.functional as F
 # When using the GPU, it is important that your model and all data are on the 
 # same device.
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+# Remove the classifier head
+class NoFinalLayerInception(nn.Module):
+    def __init__(self, original_model):
+        super(NoFinalLayerInception, self).__init__()
+        self.features = nn.Sequential(*list(original_model.children())[:-1])
+
+    def forward(self, x):
+        x = self.features(x)
+        return x
 
 def generate_embeddings():
     """
@@ -39,14 +51,29 @@ def generate_embeddings():
 
     # TODO: define a model for extraction of the embeddings (Hint: load a pretrained model,
     #  more info here: https://pytorch.org/vision/stable/models.html)
-    model = nn.Module()
-    model.to(device)
-    embedding_size = 1000 # Dummy variable, replace with the actual embedding size once you 
+    model_init = model.inception_v3(pretrained=True)
+    model = NoFinalLayerInception(model_init)
+    #model.to(device)
+    embedding_size = 2048 #this works, I tried it 
+                        #for the second to last layer the embedding size is 2048
+     # Dummy variable, replace with the actual embedding size once you 
     # pick your model
     num_images = len(train_dataset)
-    embeddings = np.zeros((num_images, embedding_size))
+    #embeddings = np.zeros((num_images, embedding_size))
+    embeddings_list = []
     # TODO: Use the model to extract the embeddings. Hint: remove the last layers of the 
-    # model to access the embeddings the model generates. 
+    # model to access the embeddings the model generates.
+
+    model.eval()  # Set the model to evaluation mode
+    
+    with torch.no_grad():  # Disable gradient computation
+        for images, _ in dataloader:
+            #images = images.to(device)  # Move images to the device
+            # Forward pass through the model to get the output
+            outputs, _ = model(images)  # Get both output and auxiliary output
+            # Extract embeddings from the output
+            embeddings = outputs.cpu().numpy()
+            embeddings_list.append(embeddings)  # Append embeddings to the list
 
     np.save('dataset/embeddings.npy', embeddings)
 
