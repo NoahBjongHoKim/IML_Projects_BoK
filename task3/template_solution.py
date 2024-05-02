@@ -6,6 +6,7 @@ from torchvision import transforms
 from torch.utils.data import DataLoader, TensorDataset
 import os
 import torch
+import torchvision
 from torchvision import transforms
 import torchvision.datasets as datasets
 import torch.nn as nn
@@ -39,35 +40,49 @@ def generate_embeddings():
     # The required pre-processing depends on the pre-trained model you choose 
     # below. 
     # See https://pytorch.org/vision/stable/models.html#using-the-pre-trained-models
-    train_transforms = transforms.Compose([transforms.ToTensor()])
+
+    #Average image width: 453.9186
+    #Average image height: 306.4356
+    image_size = (306,453)
+
+    train_transforms = transforms.Compose([
+                               transforms.Resize(image_size),
+                               transforms.CenterCrop(image_size),
+                               transforms.ToTensor(),
+                               transforms.Normalize((0.5,), (0.5,)),
+                             ])
 
     train_dataset = datasets.ImageFolder(root="dataset/", transform=train_transforms)
     # Hint: adjust batch_size and num_workers to your PC configuration, so that you don't 
     # run out of memory (VRAM if on GPU, RAM if on CPU)
+    
+    #we have to pass images of the same size to the DataLoader or it is unhappy (just like me)
     train_loader = DataLoader(dataset=train_dataset,
                               batch_size=64, #maybe set to 32 if it does not work
                               shuffle=False, #set this to true?
-                              pin_memory=True, num_workers=16) #and this to 8
+                              pin_memory=True, num_workers=4, #and this to 8
+                                )
 
     # TODO: define a model for extraction of the embeddings (Hint: load a pretrained model,
     #  more info here: https://pytorch.org/vision/stable/models.html)
-    model_init = model.inception_v3(pretrained=True)
+    model_init = torchvision.models.inception_v3(weights='Inception_V3_Weights.DEFAULT')
     model = NoFinalLayerInception(model_init)
     #model.to(device)
     embedding_size = 2048 #this works, I tried it 
                         #for the second to last layer the embedding size is 2048
-     # Dummy variable, replace with the actual embedding size once you 
+    # Dummy variable, replace with the actual embedding size once you 
     # pick your model
     num_images = len(train_dataset)
     #embeddings = np.zeros((num_images, embedding_size))
-    embeddings_list = []
+    embeddings_list = np.array([])
     # TODO: Use the model to extract the embeddings. Hint: remove the last layers of the 
     # model to access the embeddings the model generates.
 
     model.eval()  # Set the model to evaluation mode
     
     with torch.no_grad():  # Disable gradient computation
-        for images, _ in dataloader:
+        for images in train_loader:
+            #print(images)
             #images = images.to(device)  # Move images to the device
             # Forward pass through the model to get the output
             outputs, _ = model(images)  # Get both output and auxiliary output
@@ -75,6 +90,7 @@ def generate_embeddings():
             embeddings = outputs.cpu().numpy()
             embeddings_list.append(embeddings)  # Append embeddings to the list
 
+    assert(embeddings_list.size() == (num_images, embedding_size))
     np.save('dataset/embeddings.npy', embeddings)
 
 
@@ -99,6 +115,7 @@ def get_data(file, train=True):
     filenames = [s[0].split('/')[-1].replace('.jpg', '') for s in train_dataset.samples]
     embeddings = np.load('dataset/embeddings.npy')
     # TODO: Normalize the embeddings
+    embeddings = torch.preprocessing.normalize(embeddings, norm='l2') #TODO: may use another norm here
 
     file_to_embedding = {}
     for i in range(len(filenames)):
@@ -120,7 +137,7 @@ def get_data(file, train=True):
 
 # Hint: adjust batch_size and num_workers to your PC configuration, so that you 
 # don't run out of memory (VRAM if on GPU, RAM if on CPU)
-def create_loader_from_np(X, y = None, train = True, batch_size=64, shuffle=True, num_workers = 4):
+def create_loader_from_np(X, y = None, train = True, batch_size=32, shuffle=True, num_workers = 4):
     """
     Create a torch.utils.data.DataLoader object from numpy arrays containing the data.
 
